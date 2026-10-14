@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080909">
+<meta name="description" content="ASHOK GPT: ChatGPT-style AI chat for coding, Minecraft mods and plugins">
+<title>ASHOK GPT</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar" aria-label="Chats">
+    <div class="side-head">
+      <img class="logo-sm" src="assets/ashok-gpt-logo.jpg" alt="">
+      <div class="brand">ASHOK <em>GPT</em></div>
+      <button type="button" class="icon-btn side-close" id="closeSide" aria-label="Close chats">✕</button>
+    </div>
+    <button type="button" class="new-chat" id="newChat">＋ New chat</button>
+    <input class="search" id="chatSearch" type="search" placeholder="Search chats…" aria-label="Search chats">
+    <div class="chat-list" id="chatList"></div>
+    <div class="side-foot">
+      <div class="conn"><span class="dot" id="connDot"></span><span id="connText">Not connected</span></div>
+      <button type="button" class="side-link" id="sideSettings">⚙ Settings</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <button type="button" class="icon-btn menu-btn" id="menuBtn" aria-label="Open chats">☰</button>
+      <button type="button" class="mode-pill" id="modePill"><span id="modeLabel">General chat</span><span class="caret">▾</span></button>
+      <span class="model-tag" id="modelTag"></span>
+      <button type="button" class="icon-btn top-new" id="topNew" aria-label="New chat">＋</button>
+      <button type="button" class="icon-btn" id="settingsBtn" aria-label="Settings">⚙</button>
+    </header>
+
+    <section class="stage" id="stage">
+      <div class="welcome" id="welcome">
+        <img class="logo-big" src="assets/ashok-gpt-logo.jpg" alt="ASHOK GPT logo">
+        <h1>Kya banayein aaj?</h1>
+        <p>Minecraft mods, server plugins, code aur error fixing, ek hi jagah.</p>
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+      <div class="messages" id="messages" aria-live="polite"></div>
+    </section>
+
+    <footer class="composer-wrap">
+      <div class="attach-row hidden" id="attachRow"></div>
+      <form class="composer" id="composer">
+        <button type="button" class="icon-btn attach" id="attachBtn" aria-label="Attach file">＋</button>
+        <textarea id="input" rows="1" placeholder="Message ASHOK GPT…" aria-label="Message"></textarea>
+        <button type="submit" class="send" id="sendBtn" aria-label="Send">↑</button>
+        <button type="button" class="stop hidden" id="stopBtn" aria-label="Stop">■</button>
+      </form>
+      <input type="file" id="fileInput" class="hidden" multiple
+        accept=".txt,.md,.json,.js,.jsx,.ts,.tsx,.html,.css,.java,.kt,.kts,.gradle,.xml,.yml,.yaml,.toml,.properties,.cfg,.ini,.py,.c,.h,.cpp,.cs,.go,.rs,.php,.sql,.sh,.bat,.csv,.log,.mcfunction,.json5">
+      <p class="fine">AI galat ho sakta hai. Code run karne se pehle review karo. API key kisi ko mat do.</p>
+    </footer>
+  </main>
+</div>
+
+<!-- Mode picker -->
+<div class="overlay bottom hidden" id="modeSheet">
+  <div class="sheet" role="dialog" aria-label="Choose mode">
+    <div class="sheet-head"><b>Mode chuno</b><button type="button" class="icon-btn" id="closeMode" aria-label="Close">✕</button></div>
+    <div id="modeList"></div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div class="full hidden" id="settingsPanel">
+  <div class="panel">
+    <div class="panel-head">
+      <button type="button" class="icon-btn" id="closeSettings" aria-label="Back">←</button>
+      <b>Settings</b>
+      <span></span>
+    </div>
+
+    <section class="card">
+      <h3>AI provider</h3>
+      <div class="warn">API key is device par save hoti hai. Kabhi bhi public GitHub files mein mat daalna, aur provider par spending limit lagao.</div>
+      <label for="provider">Provider</label>
+      <select id="provider">
+        <option value="openrouter">OpenRouter (recommended)</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="openai">OpenAI</option>
+        <option value="custom">Custom OpenAI-compatible</option>
+      </select>
+      <label for="apiKey">API key</label>
+      <div class="inline-field">
+        <input id="apiKey" type="password" autocomplete="off" placeholder="Paste your API key">
+        <button type="button" class="mini-btn" id="toggleKey">Show</button>
+      </div>
+      <label for="model">Model ID</label>
+      <input id="model" placeholder="e.g. openai/gpt-4o-mini">
+      <div id="baseUrlRow">
+        <label for="baseUrl">API base URL</label>
+        <input id="baseUrl" placeholder="https://openrouter.ai/api/v1">
+      </div>
+      <div class="row-actions">
+        <button type="button" class="primary-btn" id="saveSettings">Save</button>
+        <button type="button" class="secondary-btn" id="testConnection">Test connection</button>
+      </div>
+      <p class="hint" id="settingsStatus"></p>
+      <button type="button" class="link-danger" id="forgetKey">Forget saved API key</button>
+    </section>
+
+    <section class="card">
+      <h3>Coding setup</h3>
+      <label for="mcVersion">Minecraft version (mods aur plugins ke liye)</label>
+      <input id="mcVersion" placeholder="1.21.11">
+      <label for="defaultMode">Default mode (naye chats ke liye)</label>
+      <select id="defaultMode">
+        <option value="general">General chat</option>
+        <option value="coding">Coding Lab</option>
+        <option value="mod">Minecraft Mod</option>
+        <option value="plugin">Minecraft Plugin</option>
+        <option value="webapp">Web &amp; Android App</option>
+        <option value="debug">Debug &amp; Logs</option>
+      </select>
+      <label for="answerStyle">Answer style</label>
+      <select id="answerStyle">
+        <option value="balanced">Balanced</option>
+        <option value="concise">Concise</option>
+        <option value="detailed">Detailed</option>
+      </select>
+      <label for="creativity">Creativity</label>
+      <select id="creativity">
+        <option value="default">Model default</option>
+        <option value="precise">Precise (0.2)</option>
+        <option value="balanced">Balanced (0.7)</option>
+        <option value="creative">Creative (1.0)</option>
+      </select>
+      <label for="customInstructions">Custom instructions</label>
+      <textarea id="customInstructions" rows="4" maxlength="1500" placeholder="Jaise: Hamesha Hinglish mein samjhao. Java 21 use karo."></textarea>
+      <label class="check"><input type="checkbox" id="streaming"> Stream replies (words dheere-dheere dikhen)</label>
+      <label class="check"><input type="checkbox" id="enterToSend"> Enter se send karo (desktop, Shift+Enter nayi line)</label>
+      <div class="row-actions">
+        <button type="button" class="primary-btn" id="saveSettings2">Save</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Data</h3>
+      <p class="muted small">Chats sirf is device par save hoti hain. Message bhejne par chat ka text aur attached file ka content aapke selected provider ko jaata hai.</p>
+      <div class="row-actions">
+        <button type="button" class="secondary-btn" id="exportChats">Export chats (.json)</button>
+        <button type="button" class="danger-btn" id="deleteAll">Delete all chats</button>
+      </div>
+    </section>
+
+    <p class="fine">ASHOK GPT v5</p>
+  </div>
+</div>
+
+<!-- Dialog (rename, delete confirm) -->
+<div class="overlay hidden" id="dlgBack">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <h3 id="dlgTitle"></h3>
+    <p id="dlgText" class="muted"></p>
+    <input id="dlgInput" class="hidden" maxlength="60" aria-label="Value">
+    <div class="row-actions end">
+      <button type="button" class="secondary-btn" id="dlgCancel">Cancel</button>
+      <button type="button" class="primary-btn" id="dlgOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "appId": "com.ashokgpt.app",
+  "appName": "ASHOK GPT",
+  "webDir": "build-web",
+  "server": { "androidScheme": "https" }
+}
