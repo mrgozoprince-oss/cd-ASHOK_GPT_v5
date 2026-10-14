@@ -1,0 +1,41 @@
+name: Build ASHOK GPT Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install packages
+        run: npm install
+      - name: Prepare web app assets
+        run: |
+          mkdir -p build-web
+          cp index.html app.js style.css manifest.json build-web/
+          cp -r assets build-web/
+      - name: Generate Android project
+        run: npx cap add android
+      - name: Sync app assets
+        run: npx cap sync android
+      - name: Build debug APK
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASHOK-GPT-debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
